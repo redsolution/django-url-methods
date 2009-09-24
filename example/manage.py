@@ -4,8 +4,10 @@ import os, sys
 example_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(example_dir)
 
-sys.path.insert(0, example_dir)
-sys.path.insert(0, parent_dir)
+sys.path[0:0] = [
+    example_dir,
+    parent_dir,
+]
 
 from django.core.management import execute_manager
 try:
