@@ -31,7 +31,7 @@ def http404(request):
 def http500(request):
     raise Exception
 
-def request_response(request):
+def request_true_response(request):
     from urlmethods import local_check
     result = local_check(reverse('response'))
     if result:
@@ -39,7 +39,7 @@ def request_response(request):
     else:
         return HttpResponse('False')
 
-def request_notfound(request):
+def request_false_response(request):
     from urlmethods import local_check
     result = local_check(reverse('notfound'))
     if result:

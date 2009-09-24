@@ -143,6 +143,47 @@ def local_response(path, query=None, follow_redirect=10):
     ``follow_redirect`` is number of redirects to be followed.
      
     Return response.
+    
+    >>> local_response('/response').status_code
+    200
+    
+    >>> local_response('/notfound').status_code
+    404
+    
+    >>> local_response('/error').status_code
+    500
+    
+    >>> local_response('/redirect_response').status_code
+    200
+    
+    >>> local_response('/redirect_notfound').status_code
+    404
+    
+    >>> local_response('/redirect_redirect_response').status_code
+    200
+    
+    >>> local_response('/redirect_cicle').status_code
+    302
+    
+    >>> local_response('/permanent_redirect_response').status_code
+    200
+    
+    >>> local_response('/http404').status_code
+    404
+    
+    >>> local_response('/http500')
+    Traceback (most recent call last):
+        ...
+    Exception
+    
+    >>> local_response('/request_true_response').content
+    'True'
+    
+    >>> local_response('/request_false_response').content
+    'False'
+    
+    >>> local_response('/doesnotexists').status_code
+    404
     """
     from django.http import QueryDict
     from django.test.client import Client
@@ -166,6 +207,45 @@ def local_check(path, query=None, follow_redirect=10):
     Try to fetch specified ``path`` using django.test.Client.
     ``query`` is string with query. 
     Return True if success.
+    
+    >>> local_check('/response')
+    True
+    
+    >>> local_check('/notfound')
+    False
+    
+    >>> local_check('/error')
+    False
+    
+    >>> local_check('/redirect_response')
+    True
+    
+    >>> local_check('/redirect_notfound')
+    False
+    
+    >>> local_check('/redirect_redirect_response')
+    True
+    
+    >>> local_check('/redirect_cicle')
+    False
+    
+    >>> local_check('/permanent_redirect_response')
+    True
+    
+    >>> local_check('/http404')
+    False
+    
+    >>> local_check('/http500')
+    False
+    
+    >>> local_check('/request_true_response')
+    True
+    
+    >>> local_check('/request_false_response')
+    True
+    
+    >>> local_check('/doesnotexists')
+    False
     """
     try:
         response = local_response(path, query, follow_redirect)
