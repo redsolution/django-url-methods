@@ -31,20 +31,5 @@ class Test(unittest.TestCase):
         self.assertEqual(client.get('/request_false_response').content , 'False')
         self.assertEqual(client.get('/doesnotexists').status_code, 404)
         
-    def test_local_check(self):
-        self.assertEqual(urlmethods.local_check('/response'), True)
-        self.assertEqual(urlmethods.local_check('/notfound'), False)
-        self.assertEqual(urlmethods.local_check('/error'), False)
-        self.assertEqual(urlmethods.local_check('/redirect_response'), True)
-        self.assertEqual(urlmethods.local_check('/redirect_notfound'), False)
-        self.assertEqual(urlmethods.local_check('/redirect_redirect_response'), True)
-        self.assertEqual(urlmethods.local_check('/redirect_cicle'), False)
-        self.assertEqual(urlmethods.local_check('/permanent_redirect_response'), True)
-        self.assertEqual(urlmethods.local_check('/http404'), False)
-        self.assertEqual(urlmethods.local_check('/http500'), False)
-        self.assertEqual(urlmethods.local_check('/request_true_response'), True)
-        self.assertEqual(urlmethods.local_check('/request_false_response'), True)
-        self.assertEqual(urlmethods.local_check('/doesnotexists'), False)
-
     def tearDown(self):
         pass
