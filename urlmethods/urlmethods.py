@@ -11,6 +11,30 @@ def urlsplit(url):
     """
     Split given ``url`` to the tuple
     (scheme, authority, path, query, fragment).
+    
+    >>> urlsplit('http://www.ics.uci.edu/pub/ietf/uri/?arg1=value1&arg2=value2#Related')
+    ('http', 'www.ics.uci.edu', '/pub/ietf/uri/', 'arg1=value1&arg2=value2', 'Related')
+    
+    >>> urlsplit('http://www.ics.uci.edu')
+    ('http', 'www.ics.uci.edu', '', None, None)
+    
+    >>> urlsplit('http://www.ics.uci.edu/')
+    ('http', 'www.ics.uci.edu', '/', None, None)
+    
+    >>> urlsplit('http:/www.ics.uci.edu/')
+    ('http', None, '/www.ics.uci.edu/', None, None)
+    
+    >>> urlsplit('http:www.ics.uci.edu/')
+    ('http', None, 'www.ics.uci.edu/', None, None)
+    
+    >>> urlsplit('http/://www.ics.uci.edu/')
+    (None, None, 'http/://www.ics.uci.edu/', None, None)
+
+    >>> urlsplit('/img.png')
+    (None, None, '/img.png', None, None)
+    
+    >>> urlsplit('')
+    (None, None, '', None, None)
     """
     match = SPLIT_RE.match(url)
     return (match.group(2), match.group(4), match.group(5), match.group(7), match.group(9))
@@ -19,6 +43,18 @@ def urljoin(scheme, authority, path, query, fragment):
     """
     Join url from given
     ``scheme``, ``authority``, ``path``, ``query``, ``fragment``.
+
+    >>> url = 'http://www.ics.uci.edu/pub/ietf/uri/?arg1=value1&arg2=value2#Related'
+    >>> urljoin(*urlsplit(url)) == url
+    True
+
+    >>> url = '/img.png'
+    >>> urljoin(*urlsplit(url)) == url
+    True
+
+    >>> url = ''
+    >>> urljoin(*urlsplit(url)) == url
+    True
     """
     result = u''
     if scheme is not None:
@@ -39,13 +75,46 @@ URL_FIX_RELP = '%25'
 def urlfix(url):
     """
     Fix quotes in uri.
+    
+    >>> urlfix('/img.jpg')
+    '/img.jpg'
+
+    >>> urlfix('/%69mg.jpg')
+    '/%69mg.jpg'
+
+    >>> urlfix('/%mg.jpg')
+    '/%25mg.jpg'
+    
+    >>> urlfix('Q%WW%R%1TT%2%YYY%%34UU%a5%6A')
+    'Q%25WW%25R%251TT%252%25YYY%25%34UU%a5%6A'
     """
     return URL_FIX_RE.sub(URL_FIX_RELP, url)
 
-def urlcheck(url, user_agent='Urlmethos'):
+def remote_check(url, user_agent='Urlmethos'):
     """
     Try to fetch specified ``url``.
     Return True if success.
+    
+    >>> remote_check('http://example.com')
+    True
+
+    >>> remote_check('http://example.com/')
+    True
+    
+    >>> remote_check('http://example.com/?ask#anchor')
+    True
+    
+    >>> remote_check('http://example.com/doesnotexists.html')
+    False
+    
+    >>> remote_check('http://doesnotexists.com')
+    False
+
+    >>> remote_check('unsupported://example.com')
+    False
+
+    >>> remote_check('example.com')
+    False
     """
     import urllib2
     headers = {
@@ -65,7 +134,7 @@ def urlcheck(url, user_agent='Urlmethos'):
 # To prevent exceptions when local request will be called from request
 # we will run it in separated thread.  
 @threadmethod()
-def urllocal_response(path, query=None, follow_redirect=10):
+def local_response(path, query=None, follow_redirect=10):
     """
     Try to fetch specified ``path`` using django.test.Client.
     
@@ -81,25 +150,25 @@ def urllocal_response(path, query=None, follow_redirect=10):
     if query:
         data = QueryDict(query)
     else:
-        data = None
+        data = {}
     while True:
         response = client.get(path, data)
-        if follow_redirect and response.status_code in [301, 302]:
+        if follow_redirect and follow_redirect > 0 and response.status_code in [301, 302]:
             follow_redirect -= 1
             scheme, authority, path, query, fragment = urlsplit(response['Location'])
-            if scheme is None and authority is None:
+            if scheme == 'http' and authority == 'testserver':
                 continue
         break
-        redirects += 1
+    return response
 
-def urllocal(path, query=None, follow_redirect=10):
+def local_check(path, query=None, follow_redirect=10):
     """
     Try to fetch specified ``path`` using django.test.Client.
     ``query`` is string with query. 
     Return True if success.
     """
     try:
-        response = urllocal_response(path, query, follow_redirect)
+        response = local_response(path, query, follow_redirect)
         return response.status_code == 200
     except:
         return False
