@@ -29,6 +29,7 @@ class Test(unittest.TestCase):
         self.assertRaises(Exception, client.get, '/http500')
         self.assertEqual(client.get('/request_response').content , 'True')
         self.assertEqual(client.get('/request_notfound').content , 'False')
+        self.assertEqual(client.get('/doesnotexists').status_code, 404)
         
     def test_local_response(self):
         self.assertEqual(urlmethods.local_response('/response').status_code, 200)
@@ -43,6 +44,7 @@ class Test(unittest.TestCase):
         self.assertRaises(Exception, urlmethods.local_response, '/http500')
         self.assertEqual(urlmethods.local_response('/request_response').content , 'True')
         self.assertEqual(urlmethods.local_response('/request_notfound').content , 'False')
+        self.assertEqual(urlmethods.local_response('/doesnotexists').status_code, 404)
 
     def test_local_check(self):
         self.assertEqual(urlmethods.local_check('/response'), True)
@@ -57,6 +59,7 @@ class Test(unittest.TestCase):
         self.assertEqual(urlmethods.local_check('/http500'), False)
         self.assertEqual(urlmethods.local_check('/request_response'), True)
         self.assertEqual(urlmethods.local_check('/request_notfound'), True)
+        self.assertEqual(urlmethods.local_check('/doesnotexists'), False)
 
     def tearDown(self):
         pass
