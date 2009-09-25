@@ -131,8 +131,35 @@ def remote_check(url, user_agent='Urlmethos'):
         return False
     return True
 
-# To prevent exceptions when local request will be called from request
-# we will run it in separated thread.  
+def local_response_unthreaded(path, query=None, follow_redirect=10):
+    """
+    Try to fetch specified ``path`` using django.test.Client.
+
+    ``query`` is string with query.
+
+    ``follow_redirect`` is number of redirects to be followed.
+    
+    Return response.
+    
+    You must use threaded version of this function (local_response).
+    """
+    from django.http import QueryDict
+    from django.test.client import Client
+    client = Client()
+    if query:
+        data = QueryDict(query)
+    else:
+        data = {}
+    while True:
+        response = client.get(path, data)
+        if follow_redirect and follow_redirect > 0 and response.status_code in [301, 302]:
+            follow_redirect -= 1
+            scheme, authority, path, query, fragment = urlsplit(response['Location'])
+            if scheme == 'http' and authority == 'testserver':
+                continue
+        break
+    return response
+
 @threadmethod()
 def local_response(path, query=None, follow_redirect=10):
     """
@@ -141,8 +168,11 @@ def local_response(path, query=None, follow_redirect=10):
     ``query`` is string with query.
 
     ``follow_redirect`` is number of redirects to be followed.
-     
+    
     Return response.
+    
+    To prevent exceptions when local request will be called from request
+    we must run it in separated thread.  
     
     >>> local_response('/response').status_code
     200
@@ -185,22 +215,7 @@ def local_response(path, query=None, follow_redirect=10):
     >>> local_response('/doesnotexists').status_code
     404
     """
-    from django.http import QueryDict
-    from django.test.client import Client
-    client = Client()
-    if query:
-        data = QueryDict(query)
-    else:
-        data = {}
-    while True:
-        response = client.get(path, data)
-        if follow_redirect and follow_redirect > 0 and response.status_code in [301, 302]:
-            follow_redirect -= 1
-            scheme, authority, path, query, fragment = urlsplit(response['Location'])
-            if scheme == 'http' and authority == 'testserver':
-                continue
-        break
-    return response
+    return local_response_unthreaded(path, query, follow_redirect)
 
 def local_check(path, query=None, follow_redirect=10):
     """
