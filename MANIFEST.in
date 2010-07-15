@@ -1,0 +1,2 @@
+recursive-include urlmethods *.py
+recursive-include urlmethods *.html
