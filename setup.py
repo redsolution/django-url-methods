@@ -12,8 +12,7 @@ def read(fname):
 setup(
     name="django-url-methods",
     version="0.1.0",
-    description=("Django-url-methods provide various methods to work with urls" +
-        " with GrandmaCMS integration"),
+    description=("Django-url-methods provide various methods to work with urls"),
     license="LGPL",
     keywords="django url",
 
