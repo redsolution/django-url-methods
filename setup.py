@@ -10,7 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name="grandma.django-url-methods",
+    name="django-url-methods",
     version="0.1.0",
     description=("Django-url-methods provide various methods to work with urls" +
         " with GrandmaCMS integration"),
@@ -40,7 +40,4 @@ setup(
     include_package_data=True,
     zip_safe=False,
     long_description=open('README').read(),
-    entry_points={
-        'grandma_setup': ['urlmethods = urlmethods.grandma_setup', ],
-    }
 )
