@@ -1,2 +1,2 @@
-recursive-include urlmethods *.py
-recursive-include urlmethods *.html
+recursive-include urlmethods *
+exclude *.orig *.pyc
