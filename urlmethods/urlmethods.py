@@ -130,9 +130,98 @@ def remote_check(url, user_agent='Urlmethos'):
     try:
         req = urllib2.Request(url, None, headers)
         urllib2.urlopen(req)
-    except: # ValueError, urllib2.URLError, httplib.InvalidURL, etc.
+    except:  # ValueError, urllib2.URLError, httplib.InvalidURL, etc.
         return False
     return True
+
+
+def get_path(base_url, url):
+    """
+    Returns None or path after base url.
+
+    >>> get_path('/media/', '/media/foo.bar')
+    'foo.bar'
+
+    >>> get_path('/media/', '/media/')
+    ''
+
+    >>> get_path('/media/', '/media') is None
+    True
+
+    >>> get_path('/media/', 'media/') is None
+    True
+
+    >>> get_path('/media/', 'baz') is None
+    True
+
+    """
+    regexp = re.compile(r'^%s(?P<path>.*)$' % re.escape(base_url))
+    match = regexp.match(url)
+    if not match:
+        return None
+    return match.groupdict()['path']
+
+
+def local_media_response(path, data):
+    """
+    Returns None or media serve response.
+
+    >>> local_media_response('/foo/bar', {}) is None
+    True
+
+    >>> local_media_response('/media/foo', {}).status_code
+    200
+
+    >>> local_media_response('/media/does.not.exist', {}).status_code
+    404
+    """
+    from django.conf import settings
+    from django.http import Http404, HttpResponseNotFound
+    from django.views.static import serve
+    from django.test.client import RequestFactory
+    media_path = get_path(settings.MEDIA_URL, path)
+    if media_path is None:
+        return None
+    factory = RequestFactory()
+    request = factory.get(path, data)
+    try:
+        return serve(request=request, path=media_path, document_root=settings.MEDIA_ROOT)
+    except Http404:
+        return HttpResponseNotFound()
+
+
+def local_static_response(path, data):
+    """
+    Returns None or static serve response.
+
+    >>> local_static_response('/foo/bar', {}) is None
+    True
+
+    >>> local_static_response('/static/admin/css/base.css', {}).status_code
+    200
+
+    >>> local_static_response('/static/does.not.exist', {}).status_code
+    404
+    """
+    from django.conf import settings
+    from django.contrib.staticfiles.views import serve
+    try:
+        from django.contrib.staticfiles.handlers import url2pathname
+    except ImportError:
+        from urllib import url2pathname
+    from django.http import Http404, HttpResponseNotFound
+    from django.test.client import RequestFactory
+    static_path = get_path(settings.STATIC_URL, path)
+    if static_path is None:
+        return None
+    factory = RequestFactory()
+    request = factory.get(path, data)
+    path_name = url2pathname(static_path)
+    try:
+        return serve(request=request, path=path_name, insecure=True)
+    except Http404:
+        return HttpResponseNotFound()
+
 
 def local_response_unthreaded(path, query=None, follow_redirect=10):
     """
@@ -154,7 +243,11 @@ def local_response_unthreaded(path, query=None, follow_redirect=10):
     else:
         data = {}
     while True:
-        response = client.get(path, data)
+        response = local_media_response(path, data)
+        if response is None:
+            response = local_static_response(path, data)
+        if response is None:
+            response = client.get(path, data)
         if follow_redirect and follow_redirect > 0 and response.status_code in [301, 302]:
             follow_redirect -= 1
             scheme, authority, path, query, fragment = urlsplit(response['Location'])
@@ -218,6 +311,18 @@ def local_response(path, query=None, follow_redirect=10):
 
     >>> local_response('/does.not.exist').status_code
     404
+
+    >>> local_response('/media/foo').status_code
+    200
+
+    >>> local_response('/media/does.not.exist').status_code
+    404
+
+    >>> local_response('/static/admin/css/base.css').status_code
+    200
+
+    >>> local_response('/static/does.not.exist').status_code
+    404
     """
     return local_response_unthreaded(path, query, follow_redirect)
 
@@ -265,6 +370,18 @@ def local_check(path, query=None, follow_redirect=10):
     True
 
     >>> local_check('/does.not.exist')
+    False
+
+    >>> local_check('/media/foo')
+    True
+
+    >>> local_check('/media/does.not.exist')
+    False
+
+    >>> local_check('/static/admin/css/base.css')
+    True
+
+    >>> local_check('/static/does.not.exist')
     False
     """
     try:
