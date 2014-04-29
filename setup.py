@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="django-url-methods",
-    version="0.1.0",
+    version="0.2.0",
     description=("Django-url-methods provide various methods to work with urls"),
     license="GPLv3",
     keywords="django url",
