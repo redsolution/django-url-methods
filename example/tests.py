@@ -1,10 +1,8 @@
 import unittest
 from django.test import Client
 
-class Test(unittest.TestCase):
-    def setUp(self):
-        pass
 
+class Test(unittest.TestCase):
     def test_views(self):
         client = Client()
         self.assertEqual(client.get('/response').status_code, 200)
@@ -17,9 +15,6 @@ class Test(unittest.TestCase):
         self.assertEqual(client.get('/permanent_redirect_response').status_code, 301)
         self.assertEqual(client.get('/http404').status_code, 404)
         self.assertRaises(Exception, client.get, '/http500')
-        self.assertEqual(client.get('/request_true_response').content , 'True')
-        self.assertEqual(client.get('/request_false_response').content , 'False')
-        self.assertEqual(client.get('/doesnotexists').status_code, 404)
-        
-    def tearDown(self):
-        pass
+        self.assertEqual(client.get('/request_true_response').content, 'True')
+        self.assertEqual(client.get('/request_false_response').content, 'False')
+        self.assertEqual(client.get('/does.not.exist').status_code, 404)

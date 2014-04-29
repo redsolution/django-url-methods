@@ -1,11 +1,11 @@
 """
 http://www.ietf.org/rfc/rfc2396.txt
 """
-
 import re
 from threadmethod import threadmethod
 
 SPLIT_RE = re.compile(r'^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?')
+
 
 def urlsplit(url):
     """
@@ -37,7 +37,8 @@ def urlsplit(url):
     (None, None, '', None, None)
     """
     match = SPLIT_RE.match(url)
-    return (match.group(2), match.group(4), match.group(5), match.group(7), match.group(9))
+    return match.group(2), match.group(4), match.group(5), match.group(7), match.group(9)
+
 
 def urljoin(scheme, authority, path, query, fragment):
     """
@@ -72,6 +73,7 @@ def urljoin(scheme, authority, path, query, fragment):
 URL_FIX_RE = re.compile(r'%(?![0-9A-Fa-f]{2})')
 URL_FIX_RELP = '%25'
 
+
 def urlfix(url):
     """
     Fix quotes in uri.
@@ -90,6 +92,7 @@ def urlfix(url):
     """
     return URL_FIX_RE.sub(URL_FIX_RELP, url)
 
+
 def remote_check(url, user_agent='Urlmethos'):
     """
     Try to fetch specified ``url``.
@@ -104,10 +107,10 @@ def remote_check(url, user_agent='Urlmethos'):
     >>> remote_check('http://example.com/?ask#anchor')
     True
     
-    >>> remote_check('http://example.com/doesnotexists.html')
+    >>> remote_check('http://example.com/does.not.exist.html')
     False
     
-    >>> remote_check('http://doesnotexists.com')
+    >>> remote_check('http://does.not.exist')
     False
 
     >>> remote_check('unsupported://example.com')
@@ -138,9 +141,9 @@ def local_response_unthreaded(path, query=None, follow_redirect=10):
     ``query`` is string with query.
 
     ``follow_redirect`` is number of redirects to be followed.
-    
+
     Return response.
-    
+
     You must use threaded version of this function (local_response).
     """
     from django.http import QueryDict
@@ -160,106 +163,108 @@ def local_response_unthreaded(path, query=None, follow_redirect=10):
         break
     return response
 
+
 @threadmethod()
 def local_response(path, query=None, follow_redirect=10):
     """
     Try to fetch specified ``path`` using django.test.Client.
-    
+
     ``query`` is string with query.
 
     ``follow_redirect`` is number of redirects to be followed.
-    
+
     Return response.
-    
+
     To prevent exceptions when local request will be called from request
-    we must run it in separated thread.  
-    
+    we must run it in separated thread.
+
     >>> local_response('/response').status_code
     200
-    
+
     >>> local_response('/notfound').status_code
     404
-    
+
     >>> local_response('/error').status_code
     500
-    
+
     >>> local_response('/redirect_response').status_code
     200
-    
+
     >>> local_response('/redirect_notfound').status_code
     404
-    
+
     >>> local_response('/redirect_redirect_response').status_code
     200
-    
+
     >>> local_response('/redirect_cicle').status_code
     302
-    
+
     >>> local_response('/permanent_redirect_response').status_code
     200
-    
+
     >>> local_response('/http404').status_code
     404
-    
+
     >>> local_response('/http500')
     Traceback (most recent call last):
         ...
     Exception
-    
+
     >>> local_response('/request_true_response').content
     'True'
-    
+
     >>> local_response('/request_false_response').content
     'False'
-    
-    >>> local_response('/doesnotexists').status_code
+
+    >>> local_response('/does.not.exist').status_code
     404
     """
     return local_response_unthreaded(path, query, follow_redirect)
 
+
 def local_check(path, query=None, follow_redirect=10):
     """
     Try to fetch specified ``path`` using django.test.Client.
-    ``query`` is string with query. 
+    ``query`` is string with query.
     Return True if success.
-    
+
     >>> local_check('/response')
     True
-    
+
     >>> local_check('/notfound')
     False
-    
+
     >>> local_check('/error')
     False
-    
+
     >>> local_check('/redirect_response')
     True
-    
+
     >>> local_check('/redirect_notfound')
     False
-    
+
     >>> local_check('/redirect_redirect_response')
     True
-    
+
     >>> local_check('/redirect_cicle')
     False
-    
+
     >>> local_check('/permanent_redirect_response')
     True
-    
+
     >>> local_check('/http404')
     False
-    
+
     >>> local_check('/http500')
     False
-    
+
     >>> local_check('/request_true_response')
     True
-    
+
     >>> local_check('/request_false_response')
     True
-    
-    >>> local_check('/doesnotexists')
+
+    >>> local_check('/does.not.exist')
     False
     """
     try:
