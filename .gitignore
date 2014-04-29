@@ -1,9 +1,11 @@
-.svn
 *.orig
 *.pyc
-.project
-.pydevproject
-.settings
+/.project
+/.pydevproject
+/.settings
+/.idea
+/ENV
 *.egg-info
 dist/
 build/
+urlmethods.sqlite
