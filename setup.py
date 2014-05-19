@@ -22,7 +22,7 @@ setup(
     maintainer='Alexander Ivanov',
     maintainer_email='alexander.ivanov@redsolution.ru',
 
-    url="http://packages.python.org/django-url-methods",
+    url="https://github.com/redsolution/django-url-methods",
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
